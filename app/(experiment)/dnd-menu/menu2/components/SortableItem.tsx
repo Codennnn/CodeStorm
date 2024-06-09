@@ -1,19 +1,16 @@
-import {
-  createContext,
-  type CSSProperties,
-  type PropsWithChildren,
-  useContext,
-  useMemo,
-} from 'react'
+import { createContext, useContext, useMemo } from 'react'
 
-import type { DraggableSyntheticListeners, UniqueIdentifier } from '@dnd-kit/core'
+import type { DraggableSyntheticListeners } from '@dnd-kit/core'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { GripIcon } from 'lucide-react'
+
+import type { BaseItem } from './type'
 
 import './SortableItem.css'
 
-interface Props {
-  id: UniqueIdentifier
+interface SortableItemProps {
+  item: BaseItem
 }
 
 interface Context {
@@ -25,19 +22,31 @@ interface Context {
 const SortableItemContext = createContext<Context>({
   attributes: {},
   listeners: undefined,
-  ref() {},
+  ref: () => void 0,
 })
 
-export function SortableItem({ children, id }: PropsWithChildren<Props>) {
+export function SortableItem(props: React.PropsWithChildren<SortableItemProps>) {
+  const { children, item } = props
+  const { id, type } = item
+
   const {
-    attributes,
+    isOver,
     isDragging,
+
+    attributes,
     listeners,
     setNodeRef,
     setActivatorNodeRef,
+
     transform,
     transition,
   } = useSortable({ id })
+
+  const isOverFolder = isOver && !isDragging && type === 'folder'
+  if (isOverFolder) {
+    console.log(isOver, id, 'isOver')
+  }
+
   const context = useMemo(
     () => ({
       attributes,
@@ -46,10 +55,10 @@ export function SortableItem({ children, id }: PropsWithChildren<Props>) {
     }),
     [attributes, listeners, setActivatorNodeRef]
   )
-  const style: CSSProperties = {
-    opacity: isDragging ? 0.4 : undefined,
-    transform: CSS.Translate.toString(transform),
-    transition,
+  const style: React.CSSProperties = {
+    opacity: isDragging ? 0.6 : undefined,
+    transform: isOverFolder ? undefined : CSS.Translate.toString(transform),
+    transition: isOverFolder ? undefined : transition,
   }
 
   return (
@@ -62,13 +71,11 @@ export function SortableItem({ children, id }: PropsWithChildren<Props>) {
 }
 
 export function DragHandle() {
-  const { attributes, listeners, ref } = useContext(SortableItemContext)
+  const { attributes, listeners } = useContext(SortableItemContext)
 
   return (
-    <button className="DragHandle" {...attributes} {...listeners} ref={ref}>
-      <svg viewBox="0 0 20 20" width="12">
-        <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"></path>
-      </svg>
+    <button className="DragHandle" {...attributes} {...listeners}>
+      <GripIcon />
     </button>
   )
 }
