@@ -1,0 +1,14 @@
+{
+  "short_name": "陈梓聪的个人站",
+  "name": "陈梓聪的个人作品集网站",
+  "description": "陈梓聪的个人作品集网站，这里有我的想法和创意。",
+  "theme_color": "#334155",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "256x256"
+    },
+    { "src": "/favicon-256.png", "type": "image/png", "sizes": "256x256" }
+  ]
+}

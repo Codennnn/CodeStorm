@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --header-height: 80px;
+  --min-content-width: 300px;
+  --max-content-width: 960px;
+
+  scrollbar-width: thin;
+  color-scheme: light;
+}
+
+html {
+  @apply motion-safe:scroll-smooth;
+}
+
+body {
+  @apply text-main text-[0.9rem] bg-repeat bg-contrary;
+}

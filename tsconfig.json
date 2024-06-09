@@ -1,0 +1,17 @@
+{
+  "extends": "@codennnn/tsconfig/next.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "~/*": ["./*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "strictNullChecks": true
+  },
+  "include": ["next-env.d.ts", "**/*", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "**/.*/", ".git"]
+}

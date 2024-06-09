@@ -1,0 +1,31 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    #rect1 {
+      fill: #0f172a;
+    }
+    #rect2 {
+      fill: #fff;
+      stroke: #0f172a;
+    }
+    path {
+      fill: #0f172a;
+    }
+    @media (prefers-color-scheme: dark) {
+      #rect1 {
+        fill: #fff;
+      }
+      #rect2 {
+        fill: #0f172a;
+        stroke: #fff;
+      }
+      path {
+        fill: #fff;
+      }
+    }
+  </style>
+  <rect id="rect1" y="34" width="222" height="222" />
+  <rect id="rect2" x="31" y="10" width="215" height="215" stroke-width="20" />
+  <path
+    d="M145.875 202H113.729V70.6768H145.875V127.073H151.515L187.448 70.6768H221.125L176.894 136.097L225.556 202H189.462L150.871 146.812H145.875V202Z"
+  />
+</svg>
