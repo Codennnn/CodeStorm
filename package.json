@@ -28,6 +28,7 @@
     "react-merge-refs": "^2.1.1"
   },
   "devDependencies": {
+    "@babel/preset-react": "^7.24.7",
     "@codennnn/tsconfig": "1.2.1",
     "@types/node": "20.12.11",
     "@types/react": "18.3.2",
