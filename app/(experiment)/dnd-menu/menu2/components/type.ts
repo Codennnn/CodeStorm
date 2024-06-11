@@ -1,8 +1,14 @@
 import type { UniqueIdentifier } from '@dnd-kit/core'
 
-export interface BaseItem {
+export interface TreeItem {
   id: UniqueIdentifier
-  level: 1 | 2
+  children?: TreeItem[]
+  collapsed?: boolean
+}
+
+export interface FlattenedItem extends TreeItem {
+  parentId?: TreeItem['id']
+  depth: number
+  index: number
   type: 'folder' | 'file'
-  parentId?: BaseItem['id']
 }

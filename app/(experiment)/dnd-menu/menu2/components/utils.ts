@@ -1,19 +1,95 @@
 import { arrayMove } from '@dnd-kit/sortable'
 
-import type { BaseItem } from './type'
+import type { FlattenedItem, TreeItem } from './type'
+
+function flatten(
+  items: TreeItem['children'],
+  parentId?: TreeItem['id'],
+  depth = 0
+): FlattenedItem[] {
+  if (Array.isArray(items)) {
+    return items.reduce<FlattenedItem[]>((acc, item, index) => {
+      return [
+        ...acc,
+        {
+          ...item,
+          parentId,
+          depth,
+          index,
+          type: Array.isArray(item.children) && item.children.length > 0 ? 'folder' : 'file',
+        },
+        ...flatten(item.children, item.id, depth + 1),
+      ]
+    }, [])
+  }
+
+  return []
+}
+
+export function flattenTree(items: TreeItem[]): FlattenedItem[] {
+  return flatten(items)
+}
+
+export function findItem(items: TreeItem[], itemId: TreeItem['id']) {
+  return items.find(({ id }) => id === itemId)
+}
+
+export function buildTree(flattenedItems: FlattenedItem[]): TreeItem[] {
+  const root: TreeItem = { id: 'root', children: [] }
+  const nodes: Record<string, TreeItem> = { [root.id]: root }
+  const items = flattenedItems.map((item) => ({ ...item, children: [] }))
+
+  for (const item of items) {
+    const { id, children } = item
+    const parentId = item.parentId ?? root.id
+    const parent = nodes[parentId] ?? findItem(items, parentId)
+
+    nodes[id] = { id, children }
+    parent.children?.push(item)
+  }
+
+  return root.children!
+}
+
+export function removeChildrenOf(items: FlattenedItem[], ids: FlattenedItem['id'][]) {
+  const excludeParentIds = [...ids]
+
+  return items.filter((item) => {
+    if (item.parentId && excludeParentIds.includes(item.parentId)) {
+      if (Array.isArray(item.children) && item.children.length > 0) {
+        excludeParentIds.push(item.id)
+      }
+      return false
+    }
+
+    return true
+  })
+}
+
+function getMaxDepth({ previousItem }: { previousItem: FlattenedItem }) {
+  if (previousItem) {
+    return previousItem.depth + 1
+  }
+
+  return 0
+}
+
+function getMinDepth({ nextItem }: { nextItem: FlattenedItem }) {
+  if (nextItem) {
+    return nextItem.depth
+  }
+
+  return 0
+}
 
 function getDragDepth(offset: number, indentationWidth: number) {
   return Math.round(offset / indentationWidth)
 }
 
-function getMaxDepth({ previousItem }: { previousItem: BaseItem }) {
-  return previousItem.depth + 1
-}
-
 export function getProjection(
-  items: BaseItem[],
-  activeId: string,
-  overId: string,
+  items: FlattenedItem[],
+  activeId: FlattenedItem['id'],
+  overId: FlattenedItem['id'],
   dragOffset: number,
   indentationWidth: number
 ) {
@@ -37,11 +113,9 @@ export function getProjection(
     depth = minDepth
   }
 
-  return { depth, maxDepth, minDepth, parentId: getParentId() }
-
-  function getParentId() {
+  function getParentId(): FlattenedItem['parentId'] {
     if (depth === 0 || !previousItem) {
-      return null
+      return undefined
     }
 
     if (depth === previousItem.depth) {
@@ -57,142 +131,8 @@ export function getProjection(
       .reverse()
       .find((item) => item.depth === depth)?.parentId
 
-    return newParent ?? null
-  }
-}
-
-function getMinDepth({ nextItem }: { nextItem: BaseItem }) {
-  if (nextItem) {
-    return nextItem.depth
+    return newParent
   }
 
-  return 0
-}
-
-function flatten(items: TreeItems, parentId: string | null = null, depth = 0): BaseItem[] {
-  return items.reduce<BaseItem[]>((acc, item, index) => {
-    return [
-      ...acc,
-      { ...item, parentId, depth, index },
-      ...flatten(item.children, item.id, depth + 1),
-    ]
-  }, [])
-}
-
-export function flattenTree(items: TreeItems): BaseItem[] {
-  return flatten(items)
-}
-
-export function buildTree(flattenedItems: BaseItem[]): TreeItems {
-  const root: TreeItem = { id: 'root', children: [] }
-  const nodes: Record<string, TreeItem> = { [root.id]: root }
-  const items = flattenedItems.map((item) => ({ ...item, children: [] }))
-
-  for (const item of items) {
-    const { id, children } = item
-    const parentId = item.parentId ?? root.id
-    const parent = nodes[parentId] ?? findItem(items, parentId)
-
-    nodes[id] = { id, children }
-    parent.children.push(item)
-  }
-
-  return root.children
-}
-
-export function findItem(items: TreeItem[], itemId: string) {
-  return items.find(({ id }) => id === itemId)
-}
-
-export function findItemDeep(items: TreeItems, itemId: string): TreeItem | undefined {
-  for (const item of items) {
-    const { id, children } = item
-
-    if (id === itemId) {
-      return item
-    }
-
-    if (children.length) {
-      const child = findItemDeep(children, itemId)
-
-      if (child) {
-        return child
-      }
-    }
-  }
-
-  return undefined
-}
-
-export function removeItem(items: TreeItems, id: string) {
-  const newItems = []
-
-  for (const item of items) {
-    if (item.id === id) {
-      continue
-    }
-
-    if (item.children.length) {
-      item.children = removeItem(item.children, id)
-    }
-
-    newItems.push(item)
-  }
-
-  return newItems
-}
-
-export function setProperty<T extends keyof TreeItem>(
-  items: TreeItems,
-  id: string,
-  property: T,
-  setter: (value: TreeItem[T]) => TreeItem[T]
-) {
-  for (const item of items) {
-    if (item.id === id) {
-      item[property] = setter(item[property])
-      continue
-    }
-
-    if (item.children.length) {
-      item.children = setProperty(item.children, id, property, setter)
-    }
-  }
-
-  return [...items]
-}
-
-function countChildren(items: TreeItem[], count = 0): number {
-  return items.reduce((acc, { children }) => {
-    if (children.length) {
-      return countChildren(children, acc + 1)
-    }
-
-    return acc + 1
-  }, count)
-}
-
-export function getChildCount(items: TreeItems, id: string) {
-  if (!id) {
-    return 0
-  }
-
-  const item = findItemDeep(items, id)
-
-  return item ? countChildren(item.children) : 0
-}
-
-export function removeChildrenOf(items: BaseItem[], ids: string[]) {
-  const excludeParentIds = [...ids]
-
-  return items.filter((item) => {
-    if (item.parentId && excludeParentIds.includes(item.parentId)) {
-      if (item.children.length) {
-        excludeParentIds.push(item.id)
-      }
-      return false
-    }
-
-    return true
-  })
+  return { depth, maxDepth, minDepth, parentId: getParentId() }
 }

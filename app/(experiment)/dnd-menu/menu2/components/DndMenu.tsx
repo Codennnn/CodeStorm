@@ -3,31 +3,36 @@
 import { useState } from 'react'
 
 import { SortableItem } from './SortableItem'
+import { SortableItemContent } from './SortableItemContent'
 import { SortableList } from './SortableList'
-import type { BaseItem } from './type'
+import type { TreeItem } from './type'
 
 const data = [
-  { id: 1, level: 1, type: 'file' },
-  { id: 2, level: 1, type: 'folder' },
-  { id: 3, level: 2, type: 'file', parentId: 2 },
-  { id: 4, level: 2, type: 'file', parentId: 2 },
-  { id: 5, level: 1, type: 'file' },
-  { id: 6, level: 1, type: 'folder' },
-  { id: 7, level: 2, type: 'file', parentId: 6 },
-  { id: 8, level: 2, type: 'file', parentId: 6 },
-  { id: 9, level: 2, type: 'file', parentId: 6 },
-] satisfies BaseItem[]
+  {
+    id: '111',
+  },
+  {
+    id: '222',
+    children: [{ id: '222_111' }, { id: '222_222' }, { id: '222_333' }, { id: 'Winter' }],
+  },
+  {
+    id: '333',
+  },
+  {
+    id: '444',
+    children: [{ id: '444_111' }, { id: '444_222' }],
+  },
+] satisfies TreeItem[]
 
 export function DndMenu() {
-  const [items, setItems] = useState<BaseItem[]>(data)
+  const [items, setItems] = useState<TreeItem[]>(data)
 
   return (
     <SortableList
       items={items}
       renderItem={(item) => (
         <SortableItem item={item}>
-          {item.id}
-          <SortableList.DragHandle />
+          <SortableItemContent item={item} />
         </SortableItem>
       )}
       onChange={setItems}

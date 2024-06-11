@@ -6,7 +6,7 @@
   "scripts": {
     "build": "next build",
     "deps": "pnpm up --interactive --latest",
-    "dev": "next dev",
+    "dev": "next dev -p 8000",
     "lint": "run-p lint:ts lint:es lint:css",
     "lint:css": "stylelint **/*.css",
     "lint:es": "eslint **/*.{ts,tsx}",
