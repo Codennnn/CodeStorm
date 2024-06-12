@@ -4,7 +4,7 @@ import type { useSortable } from '@dnd-kit/sortable'
 
 type UseSortable = ReturnType<typeof useSortable>
 
-type Context = Pick<UseSortable, 'isDragging' | 'isOver'>
+type Context = Pick<UseSortable, 'isDragging'>
 
 const SortableItemContext = createContext<Partial<Context>>({} as Context)
 

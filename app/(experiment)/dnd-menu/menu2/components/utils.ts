@@ -54,22 +54,29 @@ export function flattenTree(items: TreeItem[]): FlattenedItem[] {
   return flatten(items)
 }
 
-export function findItem(items: TreeItem[], itemId: TreeItem['id']) {
-  return items.find(({ id }) => id === itemId)
-}
-
 export function buildTree(flattenedItems: FlattenedItem[]): TreeItem[] {
   const root: TreeItem = { id: 'root', children: [] }
   const nodes: Record<string, TreeItem> = { [root.id]: root }
-  const items = flattenedItems.map((item) => ({ ...item, children: [] }))
+  const items = flattenedItems.map<FlattenedItem>((item) => ({
+    ...item,
+    children: [],
+  }))
 
   for (const item of items) {
     const { id, children } = item
+
     const parentId = item.parentId ?? root.id
-    const parent = nodes[parentId] ?? findItem(items, parentId)
+    const parent = parentId ? nodes[parentId] ?? items.find((it) => it.id === parentId) : undefined
 
     nodes[id] = { id, children }
-    parent.children?.push(item)
+
+    if (parent) {
+      if (Array.isArray(parent.children)) {
+        parent.children.push(item)
+      } else {
+        parent.children = [item]
+      }
+    }
   }
 
   return root.children!
@@ -106,29 +113,42 @@ function getMinDepth({ nextItem }: { nextItem: FlattenedItem }) {
   return 0
 }
 
-function getDragDepth(offset: number, indentationWidth: number) {
-  return Math.round(offset / indentationWidth)
+function getDragDepth(offset: number, indentWidth: number) {
+  return Math.round(offset / indentWidth)
 }
 
-export function getProjection(
-  items: FlattenedItem[],
-  activeId: FlattenedItem['id'],
-  overId: FlattenedItem['id'],
-  dragOffset: number,
-  indentationWidth: number
-) {
+export function getProjection({
+  items,
+  activeId,
+  overId,
+  maxDepth: maxLevel,
+  dragOffset,
+  indentWidth,
+}: {
+  items: FlattenedItem[]
+  activeId: FlattenedItem['id']
+  overId: FlattenedItem['id']
+  maxDepth?: number
+  dragOffset: number
+  indentWidth: number
+}) {
   const overItemIndex = items.findIndex(({ id }) => id === overId)
   const activeItemIndex = items.findIndex(({ id }) => id === activeId)
   const activeItem = items[activeItemIndex]
+
   const newItems = arrayMove(items, activeItemIndex, overItemIndex)
   const previousItem = newItems[overItemIndex - 1]
   const nextItem = newItems[overItemIndex + 1]
-  const dragDepth = getDragDepth(dragOffset, indentationWidth)
-  const projectedDepth = activeItem.depth + dragDepth
-  const maxDepth = getMaxDepth({
-    previousItem,
-  })
+
+  const maxDepth =
+    activeItem.type === 'folder' || (previousItem.type === 'file' && !previousItem.parentId)
+      ? 0
+      : maxLevel || getMaxDepth({ previousItem })
   const minDepth = getMinDepth({ nextItem })
+
+  const dragDepth = getDragDepth(dragOffset, indentWidth)
+  const projectedDepth = activeItem.depth + dragDepth
+
   let depth = projectedDepth
 
   if (projectedDepth >= maxDepth) {
@@ -137,7 +157,7 @@ export function getProjection(
     depth = minDepth
   }
 
-  function getParentId(): FlattenedItem['parentId'] {
+  const getParentId = (): FlattenedItem['parentId'] => {
     if (depth === 0 || !previousItem) {
       return undefined
     }

@@ -18,6 +18,7 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@floating-ui/react": "^0.24.8",
+    "array-to-tree": "^3.3.2",
     "dnd-kit-sortable-tree": "^0.1.73",
     "framer-motion": "^10.16.16",
     "lucide-react": "^0.378.0",

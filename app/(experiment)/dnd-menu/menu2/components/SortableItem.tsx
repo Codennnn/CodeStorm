@@ -13,7 +13,6 @@ export function SortableItem(props: React.PropsWithChildren<SortableItemProps>) 
 
   const {
     isDragging,
-    isOver,
 
     attributes,
     listeners,
@@ -34,7 +33,6 @@ export function SortableItem(props: React.PropsWithChildren<SortableItemProps>) 
       <SortableItemContextProvider
         value={{
           isDragging,
-          isOver,
         }}
       >
         {children}

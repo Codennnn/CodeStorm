@@ -35,15 +35,17 @@ export function DndMenu() {
         <SortableItemContent
           item={item}
           {...restRenderProps}
-          onClick={() => {
-            setSelectedId(item.id)
-          }}
           onCollapse={(collapsed) => {
             setItems(
               setProperty(items, item.id, 'collapsed', () => {
                 return collapsed
               })
             )
+          }}
+          onSelect={() => {
+            if (item.type === 'file') {
+              setSelectedId(item.id)
+            }
           }}
         />
       )}

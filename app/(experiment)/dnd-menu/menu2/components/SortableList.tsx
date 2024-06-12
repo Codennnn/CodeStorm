@@ -13,12 +13,13 @@ import './SortableList.css'
 interface SortableListProps {
   items: TreeItem[]
   selectedKey?: TreeItem['id']
+  indentWidth: number
   renderItem?: (renderProps: RenderProps) => React.ReactNode
   onChange?: (items: TreeItem[]) => void
 }
 
 export function SortableList(props: SortableListProps) {
-  const { items, selectedKey, renderItem, onChange } = props
+  const { items, selectedKey, indentWidth = 16, renderItem, onChange } = props
 
   const [active, setActive] = useState<Active | null>(null)
   const activeId = active?.id
@@ -28,25 +29,43 @@ export function SortableList(props: SortableListProps) {
 
   const [offsetLeft, setOffsetLeft] = useState(0)
 
-  const flattenedItems = useMemo(() => {
+  const [sortableItems, flattenedTree] = useMemo(() => {
     const flattenedTree = flattenTree(items)
+    const clonedFlattenedTree: FlattenedItem[] = JSON.parse(JSON.stringify(flattenedTree))
 
-    const collapsedItemIds = flattenedTree.reduce<FlattenedItem['id'][]>(
-      (acc, { children, collapsed, id }) =>
-        !!collapsed && Array.isArray(children) && children.length > 0 ? [...acc, id] : acc,
+    const collapsedItemIds = clonedFlattenedTree.reduce<FlattenedItem['id'][]>(
+      (acc, { collapsed, id, type }) => {
+        if (!!collapsed && type === 'folder') {
+          return [...acc, id]
+        }
+
+        return acc
+      },
       []
     )
 
-    return removeChildrenOf(
+    return [
+      removeChildrenOf(
+        clonedFlattenedTree,
+        activeId ? [activeId, ...collapsedItemIds] : collapsedItemIds
+      ),
       flattenedTree,
-      activeId ? [activeId, ...collapsedItemIds] : collapsedItemIds
-    )
+    ]
   }, [activeId, items])
 
-  const activeItem = activeId ? flattenedItems.find(({ id }) => id === activeId) : null
+  const activeItem = activeId ? sortableItems.find(({ id }) => id === activeId) : null
 
   const projected =
-    activeId && overId ? getProjection(flattenedItems, activeId, overId, offsetLeft, 16) : null
+    activeId && overId
+      ? getProjection({
+          items: sortableItems,
+          activeId,
+          overId,
+          dragOffset: offsetLeft,
+          maxDepth: 1,
+          indentWidth,
+        })
+      : null
 
   const resetState = () => {
     setOver(null)
@@ -59,14 +78,14 @@ export function SortableList(props: SortableListProps) {
 
     if (projected && over) {
       const { depth, parentId } = projected
-      const clonedItems: FlattenedItem[] = JSON.parse(JSON.stringify(flattenTree(items)))
-      const overIndex = clonedItems.findIndex(({ id }) => id === over.id)
-      const activeIndex = clonedItems.findIndex(({ id }) => id === active.id)
-      const activeTreeItem = clonedItems[activeIndex]
 
-      clonedItems[activeIndex] = { ...activeTreeItem, depth, parentId }
+      const overIndex = flattenedTree.findIndex(({ id }) => id === over.id)
+      const activeIndex = flattenedTree.findIndex(({ id }) => id === active.id)
+      const activeTreeItem = flattenedTree[activeIndex]
 
-      const sortedItems = arrayMove(clonedItems, activeIndex, overIndex)
+      flattenedTree[activeIndex] = { ...activeTreeItem, depth, parentId }
+
+      const sortedItems = arrayMove(flattenedTree, activeIndex, overIndex)
       const newItems = buildTree(sortedItems)
 
       onChange?.(newItems)
@@ -79,7 +98,7 @@ export function SortableList(props: SortableListProps) {
     <DndContext
       sensors={[sensor]}
       onDragCancel={() => {
-        setActive(null)
+        resetState()
       }}
       onDragEnd={handleDragEnd}
       onDragMove={({ delta }) => {
@@ -92,9 +111,17 @@ export function SortableList(props: SortableListProps) {
         setActive(active)
       }}
     >
-      <SortableContext items={flattenedItems}>
-        <ul className="SortableList" role="menu">
-          {flattenedItems.map((item) => {
+      <SortableContext items={sortableItems}>
+        <ul
+          className="SortableList"
+          role="menu"
+          style={{
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            /** @ts-ignore */
+            '--indent': `${indentWidth}px`,
+          }}
+        >
+          {sortableItems.map((item) => {
             const isSelected = item.id === selectedKey
 
             return (

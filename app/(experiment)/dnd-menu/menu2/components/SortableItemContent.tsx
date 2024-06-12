@@ -7,11 +7,11 @@ import './SortableItemContent.css'
 
 interface SortableItemContentProps extends RenderProps {
   onCollapse?: (collapsed: boolean) => void
-  onClick?: () => void
+  onSelect?: () => void
 }
 
 export function SortableItemContent(props: SortableItemContentProps) {
-  const { item, isSelected, isOverlay, onCollapse, onClick } = props
+  const { item, isSelected, isOverlay, onCollapse, onSelect } = props
   const { id, type, collapsed } = item
 
   const { isDragging } = useSortableItemContext()
@@ -27,18 +27,20 @@ export function SortableItemContent(props: SortableItemContentProps) {
         '--level': item.depth,
       }}
       onClick={() => {
-        onClick?.()
+        onSelect?.()
       }}
     >
       <div className="SortableItemContentInner">
         {isFolder ? (
           <span
             className="action-icon"
-            onClick={() => {
+            onClick={(ev) => {
+              ev.stopPropagation()
+
               onCollapse?.(!collapsed)
             }}
           >
-            {collapsed || isDragging ? (
+            {collapsed || isDragging || isOverlay ? (
               <ChevronRightIcon height="100%" width="100%" />
             ) : (
               <ChevronDownIcon height="100%" width="100%" />
