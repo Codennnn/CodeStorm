@@ -1,6 +1,30 @@
+import type { PointerEvent } from 'react'
+
+import { PointerSensor as LibPointerSensor } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 
 import type { FlattenedItem, TreeItem } from './type'
+
+// Block DnD event propagation if element have "data-no-dnd" attribute.
+const handler = ({ nativeEvent: event }: PointerEvent) => {
+  let cur = event.target as HTMLElement
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  while (cur) {
+    if (cur.dataset.noDnd) {
+      return false
+    }
+    cur = cur.parentElement!
+  }
+
+  return true
+}
+
+export class PointerSensor extends LibPointerSensor {
+  static activators = [
+    { eventName: 'onPointerDown', handler },
+  ] as (typeof LibPointerSensor)['activators']
+}
 
 function flatten(
   items: TreeItem['children'],

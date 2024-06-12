@@ -1,31 +1,60 @@
 .SortableItemContent {
-  --icon-size: 16px;
+  --color-icon-hover: #ddd;
+  --color-item-bg: #fff;
+  --color-item-hover: #f8f8f8;
+  --color-item-border: #ddd;
+  --color-item-selected: #d1fae5;
+  --size-icon: 16px;
+  --item-gap: 5px;
+  --item-padding: 6px;
 
   cursor: default;
   user-select: none;
   display: flex;
-  gap: 5px;
+  flex: 1;
   align-items: center;
-  width: 100%;
   height: 32px;
-  padding: 2px 6px;
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow:
-    0 0 0 1px rgb(63 63 68 / 5%),
-    0 1px 3px 0 rgb(34 33 81 / 15%);
-}
+  padding: 0 var(--item-padding);
+  background-color: var(--color-item-bg);
+  border-radius: 0.3em;
 
-.icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
-  border-radius: 3px;
-
-  &.collapsed {
-    transform: rotate(-0.25turn);
+  &.active,
+  &:hover {
+    background-color: var(--color-item-hover);
   }
 
-  &:hover {
-    background-color: #eee;
+  &.selected {
+    background-color: var(--color-item-selected);
+  }
+
+  &.overlay {
+    background-color: var(--color-item-bg);
+    border: 1px solid var(--color-item-border);
+  }
+}
+
+.SortableItemContentInner {
+  display: flex;
+  gap: var(--item-gap);
+  align-items: center;
+  padding-left: calc(var(--indent, 16px) * var(--level, 0));
+
+  .icon {
+    width: var(--size-icon);
+    height: var(--size-icon);
+  }
+
+  .action-icon {
+    width: var(--size-icon);
+    height: var(--size-icon);
+    border-radius: 3px;
+
+    &.collapsed {
+      transform: rotate(-0.25turn);
+    }
+
+    &:hover {
+      background-color: var(--color-icon-hover);
+    }
   }
 }

@@ -12,3 +12,9 @@ export interface FlattenedItem extends TreeItem {
   index: number
   type: 'folder' | 'file'
 }
+
+export interface RenderProps {
+  item: FlattenedItem
+  isSelected?: boolean
+  isOverlay?: boolean
+}

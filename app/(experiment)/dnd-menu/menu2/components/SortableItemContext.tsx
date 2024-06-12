@@ -6,7 +6,7 @@ type UseSortable = ReturnType<typeof useSortable>
 
 type Context = Pick<UseSortable, 'isDragging' | 'isOver'>
 
-const SortableItemContext = createContext<Context>({} as Context)
+const SortableItemContext = createContext<Partial<Context>>({} as Context)
 
 export function SortableItemContextProvider(props: React.PropsWithChildren<{ value: Context }>) {
   const { children, value } = props
