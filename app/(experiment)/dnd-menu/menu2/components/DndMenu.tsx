@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 
-import { SortableItem } from './SortableItem'
-import { SortableItemContent } from './SortableItemContent'
 import { SortableList } from './SortableList'
 import type { TreeItem } from './type'
 
@@ -13,7 +11,7 @@ const data = [
   },
   {
     id: '222',
-    children: [{ id: '222_111' }, { id: '222_222' }, { id: '222_333' }, { id: 'Winter' }],
+    children: [{ id: '222_111' }, { id: '222_222' }, { id: '222_333' }, { id: '222_444' }],
   },
   {
     id: '333',
@@ -27,15 +25,5 @@ const data = [
 export function DndMenu() {
   const [items, setItems] = useState<TreeItem[]>(data)
 
-  return (
-    <SortableList
-      items={items}
-      renderItem={(item) => (
-        <SortableItem item={item}>
-          <SortableItemContent item={item} />
-        </SortableItem>
-      )}
-      onChange={setItems}
-    />
-  )
+  return <SortableList items={items} onChange={setItems} />
 }

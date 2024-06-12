@@ -3,15 +3,10 @@ const { TYPESCRIPT_FILES } = require('prefer-code-style/constants')
 module.exports = {
   root: true,
 
-  extends: [require.resolve('prefer-code-style/eslint/preset/next'), 'plugin:jsx-a11y/recommended'],
+  extends: [require.resolve('prefer-code-style/eslint/preset/next')],
 
   rules: {
-    'tailwindcss/no-custom-classname': [
-      1,
-      {
-        whitelist: ['twitter-tweet', 'resume-link'],
-      },
-    ],
+    'tailwindcss/no-custom-classname': 0,
     'import/no-unresolved': [2, { ignore: ['^\\~/'] }],
     '@next/next/no-img-element': 0,
   },

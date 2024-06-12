@@ -136,3 +136,23 @@ export function getProjection(
 
   return { depth, maxDepth, minDepth, parentId: getParentId() }
 }
+
+export function setProperty<T extends keyof TreeItem>(
+  items: TreeItem[],
+  id: TreeItem['id'],
+  property: T,
+  setter: (value: TreeItem[T]) => TreeItem[T]
+) {
+  for (const item of items) {
+    if (item.id === id) {
+      item[property] = setter(item[property])
+      continue
+    }
+
+    if (Array.isArray(item.children) && item.children.length > 0) {
+      item.children = setProperty(item.children, id, property, setter)
+    }
+  }
+
+  return [...items]
+}

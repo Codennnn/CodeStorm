@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
+import { SortableItemContextProvider } from './SortableItemContext'
 import type { FlattenedItem } from './type'
 
 import './SortableItem.css'
@@ -15,6 +16,7 @@ export function SortableItem(props: React.PropsWithChildren<SortableItemProps>) 
 
   const {
     isDragging,
+    isOver,
 
     attributes,
     listeners,
@@ -28,12 +30,21 @@ export function SortableItem(props: React.PropsWithChildren<SortableItemProps>) 
     opacity: isDragging ? 0.6 : undefined,
     transform: CSS.Translate.toString(transform),
     transition: transition,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    /** @ts-ignore */
     '--indent': `${16 * depth}px`,
   }
 
   return (
-    <li ref={setNodeRef} className="SortableItem" style={style} {...attributes} {...listeners}>
-      {children}
-    </li>
+    <SortableItemContextProvider
+      value={{
+        isDragging,
+        isOver,
+      }}
+    >
+      <li ref={setNodeRef} className="SortableItem" style={style} {...attributes} {...listeners}>
+        {children}
+      </li>
+    </SortableItemContextProvider>
   )
 }
