@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 import { SortableItemContextProvider } from './SortableItemContext'
-import type { FlattenedItem } from './type'
+import type { FlattenedItem } from './types'
 
 interface SortableItemProps {
   item: FlattenedItem

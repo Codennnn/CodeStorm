@@ -3,7 +3,8 @@ import type { PointerEvent } from 'react'
 import { PointerSensor as LibPointerSensor } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 
-import type { FlattenedItem, TreeItem } from './type'
+import { ItemType } from './enums'
+import type { FlattenedItem, TreeItem } from './types'
 
 // Block DnD event propagation if element have "data-no-dnd" attribute.
 const handler = ({ nativeEvent: event }: PointerEvent) => {
@@ -29,7 +30,7 @@ export class PointerSensor extends LibPointerSensor {
 function flatten(
   items: TreeItem['children'],
   parentId?: TreeItem['id'],
-  depth = 0
+  level = 1
 ): FlattenedItem[] {
   if (Array.isArray(items)) {
     return items.reduce<FlattenedItem[]>((acc, item, index) => {
@@ -38,11 +39,10 @@ function flatten(
         {
           ...item,
           parentId,
-          depth,
+          level,
           index,
-          type: Array.isArray(item.children) && item.children.length > 0 ? 'folder' : 'file',
         },
-        ...flatten(item.children, item.id, depth + 1),
+        ...flatten(item.children, item.id, level + 1),
       ]
     }, [])
   }
@@ -55,7 +55,7 @@ export function flattenTree(items: TreeItem[]): FlattenedItem[] {
 }
 
 export function buildTree(flattenedItems: FlattenedItem[]): TreeItem[] {
-  const root: TreeItem = { id: 'root', children: [] }
+  const root: TreeItem = { id: 'root', type: ItemType.Folder, children: [] }
   const nodes: Record<string, TreeItem> = { [root.id]: root }
   const items = flattenedItems.map<FlattenedItem>((item) => ({
     ...item,
@@ -63,12 +63,12 @@ export function buildTree(flattenedItems: FlattenedItem[]): TreeItem[] {
   }))
 
   for (const item of items) {
-    const { id, children } = item
+    const { id, type, children } = item
 
     const parentId = item.parentId ?? root.id
     const parent = parentId ? nodes[parentId] ?? items.find((it) => it.id === parentId) : undefined
 
-    nodes[id] = { id, children }
+    nodes[id] = { id, type, children }
 
     if (parent) {
       if (Array.isArray(parent.children)) {
@@ -99,7 +99,7 @@ export function removeChildrenOf(items: FlattenedItem[], ids: FlattenedItem['id'
 
 function getMaxDepth({ previousItem }: { previousItem: FlattenedItem }) {
   if (previousItem) {
-    return previousItem.depth + 1
+    return previousItem.level + 1
   }
 
   return 0
@@ -107,7 +107,7 @@ function getMaxDepth({ previousItem }: { previousItem: FlattenedItem }) {
 
 function getMinDepth({ nextItem }: { nextItem: FlattenedItem }) {
   if (nextItem) {
-    return nextItem.depth
+    return nextItem.level
   }
 
   return 0
@@ -121,14 +121,14 @@ export function getProjection({
   items,
   activeId,
   overId,
-  maxDepth: maxLevel,
+  maxLevel: maxLevelX,
   dragOffset,
   indentWidth,
 }: {
   items: FlattenedItem[]
   activeId: FlattenedItem['id']
   overId: FlattenedItem['id']
-  maxDepth?: number
+  maxLevel?: number
   dragOffset: number
   indentWidth: number
 }) {
@@ -140,45 +140,46 @@ export function getProjection({
   const previousItem = newItems[overItemIndex - 1]
   const nextItem = newItems[overItemIndex + 1]
 
-  const maxDepth =
-    activeItem.type === 'folder' || (previousItem.type === 'file' && !previousItem.parentId)
-      ? 0
-      : maxLevel || getMaxDepth({ previousItem })
-  const minDepth = getMinDepth({ nextItem })
+  const maxLevel =
+    activeItem.type === ItemType.Folder ||
+    (previousItem.type === ItemType.File && !previousItem.parentId)
+      ? 1
+      : maxLevelX || getMaxDepth({ previousItem })
+  const minLevel = getMinDepth({ nextItem })
 
-  const dragDepth = getDragDepth(dragOffset, indentWidth)
-  const projectedDepth = activeItem.depth + dragDepth
+  const dragLevel = getDragDepth(dragOffset, indentWidth)
+  const projectedLevel = activeItem.level + dragLevel
 
-  let depth = projectedDepth
+  let level = projectedLevel
 
-  if (projectedDepth >= maxDepth) {
-    depth = maxDepth
-  } else if (projectedDepth < minDepth) {
-    depth = minDepth
+  if (projectedLevel >= maxLevel) {
+    level = maxLevel
+  } else if (projectedLevel < minLevel) {
+    level = minLevel
   }
 
   const getParentId = (): FlattenedItem['parentId'] => {
-    if (depth === 0 || !previousItem) {
+    if (level === 0 || !previousItem) {
       return undefined
     }
 
-    if (depth === previousItem.depth) {
+    if (level === previousItem.level) {
       return previousItem.parentId
     }
 
-    if (depth > previousItem.depth) {
+    if (level > previousItem.level) {
       return previousItem.id
     }
 
     const newParent = newItems
       .slice(0, overItemIndex)
       .reverse()
-      .find((item) => item.depth === depth)?.parentId
+      .find((item) => item.level === level)?.parentId
 
     return newParent
   }
 
-  return { depth, maxDepth, minDepth, parentId: getParentId() }
+  return { level, maxLevel, minDepth: minLevel, parentId: getParentId() }
 }
 
 export function setProperty<T extends keyof TreeItem>(

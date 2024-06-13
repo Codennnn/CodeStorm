@@ -1,7 +1,8 @@
 import { ChevronDownIcon, ChevronRightIcon, FileIcon, FolderClosedIcon } from 'lucide-react'
 
+import { ItemType } from './enums'
 import { useSortableItemContext } from './SortableItemContext'
-import type { RenderProps } from './type'
+import type { RenderProps } from './types'
 
 import './SortableItemContent.css'
 
@@ -16,7 +17,7 @@ export function SortableItemContent(props: SortableItemContentProps) {
 
   const { isDragging } = useSortableItemContext()
 
-  const isFolder = type === 'folder'
+  const isFolder = type === ItemType.Folder
 
   return (
     <div
@@ -24,7 +25,7 @@ export function SortableItemContent(props: SortableItemContentProps) {
       style={{
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         /** @ts-ignore */
-        '--level': item.depth,
+        '--level': item.level - 1,
       }}
       onClick={() => {
         onSelect?.()

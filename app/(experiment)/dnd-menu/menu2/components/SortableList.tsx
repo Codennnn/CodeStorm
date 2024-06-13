@@ -3,9 +3,10 @@ import { useMemo, useState } from 'react'
 import { type Active, DndContext, type DndContextProps, type Over, useSensor } from '@dnd-kit/core'
 import { arrayMove, SortableContext } from '@dnd-kit/sortable'
 
+import { ItemType } from './enums'
 import { SortableItem } from './SortableItem'
 import { SortableOverlay } from './SortableOverlay'
-import type { FlattenedItem, RenderProps, TreeItem } from './type'
+import type { FlattenedItem, RenderProps, TreeItem } from './types'
 import { buildTree, flattenTree, getProjection, PointerSensor, removeChildrenOf } from './utils'
 
 import './SortableList.css'
@@ -13,13 +14,15 @@ import './SortableList.css'
 interface SortableListProps {
   items: TreeItem[]
   selectedKey?: TreeItem['id']
-  indentWidth: number
+  indentWidth?: number
   renderItem?: (renderProps: RenderProps) => React.ReactNode
+  /** 是否禁用拖放。 */
+  disabled?: boolean
   onChange?: (items: TreeItem[]) => void
 }
 
 export function SortableList(props: SortableListProps) {
-  const { items, selectedKey, indentWidth = 16, renderItem, onChange } = props
+  const { items, selectedKey, indentWidth = 16, renderItem, disabled, onChange } = props
 
   const [active, setActive] = useState<Active | null>(null)
   const activeId = active?.id
@@ -35,7 +38,7 @@ export function SortableList(props: SortableListProps) {
 
     const collapsedItemIds = clonedFlattenedTree.reduce<FlattenedItem['id'][]>(
       (acc, { collapsed, id, type }) => {
-        if (!!collapsed && type === 'folder') {
+        if (!!collapsed && type === ItemType.Folder) {
           return [...acc, id]
         }
 
@@ -62,7 +65,7 @@ export function SortableList(props: SortableListProps) {
           activeId,
           overId,
           dragOffset: offsetLeft,
-          maxDepth: 1,
+          maxLevel: 2,
           indentWidth,
         })
       : null
@@ -77,13 +80,13 @@ export function SortableList(props: SortableListProps) {
     resetState()
 
     if (projected && over) {
-      const { depth, parentId } = projected
+      const { level, parentId } = projected
 
       const overIndex = flattenedTree.findIndex(({ id }) => id === over.id)
       const activeIndex = flattenedTree.findIndex(({ id }) => id === active.id)
       const activeTreeItem = flattenedTree[activeIndex]
 
-      flattenedTree[activeIndex] = { ...activeTreeItem, depth, parentId }
+      flattenedTree[activeIndex] = { ...activeTreeItem, level, parentId }
 
       const sortedItems = arrayMove(flattenedTree, activeIndex, overIndex)
       const newItems = buildTree(sortedItems)
@@ -111,7 +114,7 @@ export function SortableList(props: SortableListProps) {
         setActive(active)
       }}
     >
-      <SortableContext items={sortableItems}>
+      <SortableContext disabled={disabled} items={sortableItems}>
         <ul
           className="SortableList"
           role="menu"
@@ -129,7 +132,7 @@ export function SortableList(props: SortableListProps) {
                 {renderItem?.({
                   item: {
                     ...item,
-                    depth: item.id === activeId && projected ? projected.depth : item.depth,
+                    level: item.id === activeId && projected ? projected.level : item.level,
                   },
                   isSelected,
                 })}
