@@ -159,6 +159,7 @@ export function getProjection({
   }
 
   const getParentId = (): FlattenedItem['parentId'] => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (level === 0 || !previousItem) {
       return undefined
     }
