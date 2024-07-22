@@ -76,7 +76,7 @@ export function GridLayout() {
           float: true,
         },
         gridRoot.current
-      ).on('change', (ev, gsItems) => {
+      ).on('change', () => {
         const currentCols = gridStack.current?.getColumn()
 
         if (typeof currentCols === 'number') {
