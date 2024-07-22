@@ -98,6 +98,7 @@ export function removeChildrenOf(items: FlattenedItem[], ids: FlattenedItem['id'
 }
 
 function getMaxDepth({ previousItem }: { previousItem: FlattenedItem }) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (previousItem) {
     return previousItem.level + 1
   }
@@ -106,6 +107,7 @@ function getMaxDepth({ previousItem }: { previousItem: FlattenedItem }) {
 }
 
 function getMinDepth({ nextItem }: { nextItem: FlattenedItem }) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (nextItem) {
     return nextItem.level
   }
